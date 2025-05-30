@@ -33,11 +33,9 @@ pip install -r requirements.txt
 # Avvio del server Flask
 python app.py
 Poi visita http://localhost:5000 nel browser.
-
+```
 📦 Struttura del progetto
-php
-Copia
-Modifica
+```
 SQLChatbox/
 │
 ├── app.py                  # Backend Flask
@@ -54,13 +52,11 @@ SQLChatbox/
 
 🤖 LLM supportati
 Puoi integrare:
-
+```
 Ollama in locale (ollama run llama3)
 
-Gemini API (Google)
-
 Altri modelli Open Source con output testuale in SQL
-
+```
 📈 Esempi di domande supportate
 "Mostra le top 5 nazioni per emissioni nel 2002"
 
