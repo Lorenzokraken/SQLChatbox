@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8">
+  <title>SQL - ChatBOX AI</title>
+  <link rel="icon" href="{{ url_for('static', filename='images/logo.ico') }}" type="image/x-icon">
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="tooltip-side" style="top: 20px; right: 20px;">
+  <div class="tooltip-tab" onclick="toggleInfo()">💡</div>
+  <div class="tooltip-content" id="infoTooltip" style="display: none;">
+    <strong>Suggerimento:</strong> carica un database e scrivi una domanda per generare una query SQL.<br>
+    Puoi anche scrivere una query manuale e cliccare su “Esegui Query”.
+  </div>
+</div>
+
+<div class="tooltip-side" style="top: 70px; right: 20px;">
+  <div class="tooltip-tab" onclick="toggleDbTooltip()">📂</div>
+  <div class="tooltip-content" id="dbTooltipContent" style="display: none;">
+    <strong>Struttura DB:</strong><br>
+    <em>Espandi per vedere le colonne</em>
+    <div class="schema-scroll">
+      <ul id="schemaList" style="list-style: none; padding-left: 10px;"></ul>
+    </div>
+    <div class="db-desc" id="dbDescription" style="margin-top: 10px;">
+      Caricamento descrizione...
+    </div>
+  </div>
+</div>
+
+<a href="https://github.com/lorenzokraken" target="_blank" title="Vai al repository GitHub" 
+   style="position: fixed; top: 20px; left: 20px; z-index: 999;">
+  <img src="{{ url_for('static', filename='images/logo.ico') }}" alt="Logo" style="width: 36px; height: 36px;">
+</a>
+
+<div class="container">
+  <h1>SQL - ChatBOX AI</h1>
+
+  <div style="min-height: 70px; margin-bottom: 20px;">
+    {% if success %}
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <div style="background-color: #2e7d32; color: white; padding: 6px 10px; border-radius: 4px; font-size: 14px;">
+          ✅ Database caricato: <strong>{{ db_name }}</strong>
+        </div>
+        <form action="/delete-db" method="post">
+          <button type="submit" style="background-color: #e53935; color: white; padding: 6px 12px; font-size: 14px; border-radius: 4px;">
+            ❌ Rimuovi
+          </button>
+        </form>
+      </div>
+    {% else %}
+      <form action="/upload-db" method="post" enctype="multipart/form-data">
+        <label>Carica un database SQLite:</label>
+        <input type="file" name="dbfile" accept=".db" required />
+        <button type="submit">Carica</button>
+      </form>
+    {% endif %}
+  </div>
+
+  <div class="input-group">
+    <input type="text" id="question" value="scrivi una Query per: " />
+    <button id="sendBtn">Invia</button>
+  </div>
+
+  <div style="margin-bottom: 20px;">
+    <textarea id="queryBox" rows="6" style="width: 100%; background-color: #111; color: #6effa6; border: none; padding: 10px; font-family: monospace; border-radius: 5px;"></textarea>
+    <button id="runQueryBtn" style="margin-top: 10px;">Esegui Query</button>
+  </div>
+
+  <div id="loader" class="loader" style="display: none;"></div>
+  <div class="table-container" id="tableContainer"></div>
+
+  <button onclick="toggleGraphOptions()">+ Grafici</button>
+  <div class="graph-options" id="graphOptions">
+    <label>Tipo di grafico:</label>
+    <select id="graphType" onchange="updateGraphInputs()">
+      <option value="line">Linee</option>
+      <option value="bar">Barre</option>
+      <option value="pie">Torta</option>
+    </select>
+
+    <div id="lineOptions" style="margin-top: 10px;">
+      <label>Asse X:</label>
+      <select id="xAxisSelect"></select>
+      <label>Asse Y:</label>
+      <select id="yAxisSelect"></select>
+    </div>
+
+    <div id="pieOptions" style="display: none; margin-top: 10px;">
+      <label>Valore:</label>
+      <select id="pieValueSelect"></select>
+    </div>
+
+    <button onclick="generatePlotlyGraph()" style="margin-top: 15px;">Genera Grafico</button>
+    <div id="plotlyGraph"></div>
+  </div>
+</div>
+
+<script>
+let lastResult = null;
+
+function toggleGraphOptions() {
+  const section = document.getElementById('graphOptions');
+  section.style.display = section.style.display === 'none' ? 'block' : 'none';
+}
+
+function updateGraphInputs() {
+  const type = document.getElementById('graphType').value;
+  document.getElementById('lineOptions').style.display = type === 'line' || type === 'bar' ? 'block' : 'none';
+  document.getElementById('pieOptions').style.display = type === 'pie' ? 'block' : 'none';
+}
+
+function populateDropdowns(columns) {
+  const xSelect = document.getElementById('xAxisSelect');
+  const ySelect = document.getElementById('yAxisSelect');
+  const pieSelect = document.getElementById('pieValueSelect');
+  xSelect.innerHTML = ySelect.innerHTML = pieSelect.innerHTML = '';
+  columns.forEach(col => {
+    xSelect.add(new Option(col, col));
+    ySelect.add(new Option(col, col));
+    pieSelect.add(new Option(col, col));
+  });
+  suggestDefaultChart();
+}
+
+function suggestDefaultChart() {
+  if (!lastResult) return;
+  const cols = lastResult.columns;
+  const labelCandidates = ['name', 'country', 'category', 'label', 'type', 'region', 'year'];
+  const valueCandidates = ['value', 'amount', 'total', 'co2', 'emissions', 'population'];
+  const xField = cols.find(c => labelCandidates.includes(c.toLowerCase())) || cols[0];
+  const yField = cols.find(c => valueCandidates.includes(c.toLowerCase())) || cols.find(c => typeof lastResult.rows[0][cols.indexOf(c)] === 'number') || cols[1];
+  document.getElementById('xAxisSelect').value = xField;
+  document.getElementById('yAxisSelect').value = yField;
+  const graphType = xField.toLowerCase() === 'year' ? 'line' : 'bar';
+  document.getElementById('graphType').value = graphType;
+  updateGraphInputs();
+}
+
+function generatePlotlyGraph() {
+  if (!lastResult) return;
+  const type = document.getElementById('graphType').value;
+  const cols = lastResult.columns;
+  const rows = lastResult.rows;
+  if (type === 'line' || type === 'bar') {
+    const xField = document.getElementById('xAxisSelect').value;
+    const yField = document.getElementById('yAxisSelect').value;
+    const xIndex = cols.indexOf(xField);
+    const yIndex = cols.indexOf(yField);
+    const sortedRows = [...rows].sort((a, b) => isNaN(a[xIndex]) ? a[xIndex].localeCompare(b[xIndex]) : a[xIndex] - b[xIndex]);
+    const xData = sortedRows.map(r => r[xIndex]);
+    const yData = sortedRows.map(r => r[yIndex]);
+    const trace = {
+      x: xData,
+      y: yData,
+      type: type === 'line' ? 'scatter' : 'bar',
+      mode: type === 'line' ? 'lines+markers' : undefined
+    };
+    Plotly.newPlot('plotlyGraph', [trace], {
+      title: `${yField} vs ${xField}`,
+      xaxis: { title: xField },
+      yaxis: { title: yField }
+    });
+  } else if (type === 'pie') {
+    const valueField = document.getElementById('pieValueSelect').value;
+    const valueIndex = cols.indexOf(valueField);
+    const labels = rows.map((r, i) => r[0] || `Item ${i+1}`);
+    const values = rows.map(r => parseFloat(r[valueIndex]));
+    Plotly.newPlot('plotlyGraph', [{ labels, values, type: 'pie' }], { title: `Torta: ${valueField}` });
+  }
+}
+
+document.getElementById('sendBtn').onclick = async function () {
+  const question = document.getElementById('question').value;
+  document.getElementById('loader').style.display = 'block';
+  try {
+    const response = await fetch("/ask", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question })
+    });
+    const data = await response.json();
+    document.getElementById('queryBox').value = data.query.replace(/```sql|```/g, '').trim();
+    updateTable(data);
+  } catch (error) {
+    console.error("❌ Errore durante la richiesta:", error);
+    document.getElementById('tableContainer').innerHTML = `<div class="no-result">❌ Errore: ${error}</div>`;
+  } finally {
+    document.getElementById('loader').style.display = 'none';
+  }
+};
+
+document.getElementById('runQueryBtn').onclick = async function () {
+  const sql_query = document.getElementById('queryBox').value;
+  document.getElementById('loader').style.display = 'block';
+  try {
+    const response = await fetch("/ask", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question: sql_query })
+    });
+    const data = await response.json();
+    updateTable(data);
+  } catch (error) {
+    console.error("❌ Errore durante l'esecuzione della query:", error);
+    document.getElementById('tableContainer').innerHTML = `<div class="no-result">❌ Errore: ${error}</div>`;
+  } finally {
+    document.getElementById('loader').style.display = 'none';
+  }
+};
+
+function updateTable(data) {
+  const tableContainer = document.getElementById('tableContainer');
+  if (data.error) {
+    tableContainer.innerHTML = `<div class="no-result">❌ Errore: ${data.error}</div>`;
+    return;
+  }
+  if (data.result && data.result.columns && data.result.columns.length > 0) {
+    lastResult = data.result;
+    populateDropdowns(data.result.columns);
+    const headers = data.result.columns;
+    const rows = data.result.rows;
+    let html = "<table><thead><tr>";
+    headers.forEach(h => html += `<th>${h}</th>`);
+    html += "</tr></thead><tbody>";
+    rows.forEach(r => {
+      html += "<tr>";
+      r.forEach(val => html += `<td>${val}</td>`);
+      html += "</tr>";
+    });
+    html += "</tbody></table>";
+    tableContainer.innerHTML = html;
+  } else {
+    tableContainer.innerHTML = `<div class="no-result">(Nessun risultato)</div>`;
+  }
+}
+
+async function fetchSchemaTree() {
+  const res = await fetch("/schema-tree");
+  const data = await res.json();
+  const list = document.getElementById("schemaList");
+  list.innerHTML = "";
+  for (const [table, columns] of Object.entries(data)) {
+    const li = document.createElement("li");
+    li.innerHTML = `<details><summary>${table}</summary><ul>` +
+      columns.map(col => `<li style="color:#6effa6;">${col}</li>`).join('') +
+      `</ul></details>`;
+    list.appendChild(li);
+  }
+}
+
+async function fetchDbDescription() {
+  try {
+    const res = await fetch("/db-description");
+    const data = await res.json();
+    document.getElementById("dbDescription").innerText = data.description || "Descrizione non disponibile.";
+  } catch (err) {
+    document.getElementById("dbDescription").innerText = "Errore durante il caricamento.";
+    console.error("❌ Errore caricamento descrizione DB:", err);
+  }
+}
+function toggleInfo() {
+  const el = document.getElementById("infoTooltip");
+  el.style.display = el.style.display === "block" ? "none" : "block";
+}
+
+function toggleDbTooltip() {
+  const el = document.getElementById("dbTooltipContent");
+  el.style.display = el.style.display === "block" ? "none" : "block";
+}
+
+fetchSchemaTree();
+fetchDbDescription();  // ✅ FINALMENTE VIENE CHIAMATA
+</script>
+
+</body>
+</html>
