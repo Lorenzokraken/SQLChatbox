@@ -26,7 +26,7 @@ Un'applicazione web interattiva che ti permette di porre domande in linguaggio n
 
 ## ▶️ Avvio dell'app
 
-```bash
+```
 # Installazione delle dipendenze
 pip install -r requirements.txt
 
@@ -50,6 +50,8 @@ SQLChatbox/
 │   └── data.db             # Database di esempio
 ├── uploads/                # (opzionale) Per gestire file caricati
 └── README.md
+```
+
 🤖 LLM supportati
 Puoi integrare:
 
