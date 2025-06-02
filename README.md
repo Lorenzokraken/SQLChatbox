@@ -1,4 +1,6 @@
 # 🧠 SQL Chatbox AI
+Trasforma domande in linguaggio naturale in SQL ✨
+Powered by LLaMA & Flask · Local LLM · Grafici dinamici · Nessun costo API 🚀
 
 Un'applicazione web interattiva che ti permette di porre domande in linguaggio naturale su un database SQLite, generando automaticamente le query SQL grazie all'integrazione con LLM (Large Language Models) come LLaMA o Gemini.
 
@@ -14,13 +16,14 @@ Un'applicazione web interattiva che ti permette di porre domande in linguaggio n
 
 ---
 
-## 🛠 Requisiti
-
+## ⚙️ Requisiti
 - Python 3.11+
 - Flask
-- Plotly (per i grafici)
+- Plotly
 - SQLite
-- Ollama 3
+- ✅ Ollama (per usare LLaMA in locale, zero API key)
+
+
 
 ---
 Scarica e installa Ollama.
@@ -80,14 +83,22 @@ Scrivi quello che vorresti visulizzare/modificare dal database cercando di esser
 ![Immagine 2025-06-02 191956](https://github.com/user-attachments/assets/ed9eaebd-b6fc-437d-bfb2-5b48bfe1e25a)
 ```
 Ollama genererà un Query SQL e ti mostrerà i campi che ti interessano:
-Genera grafici (Torta, Barre, Linee)
+🧩 Grafici auto-generati
+📈 Linee (perfette per time series)
+📊 Barre (top N paesi / prodotti / emissioni)
+🥧 Torta (distribuzione per categoria)
 ```
 ![Screenshot 2025-06-02 192010](https://github.com/user-attachments/assets/f7e0e766-a784-483f-9439-a49cd7a7fa0e)
 ![Immagine 2025-06-02 192146](https://github.com/user-attachments/assets/4f18f270-0111-4cf9-8544-e7437049f05a)
 
 
+🧲 Prossime migliorie
+Supporto SQL PostgreSQL e MySQL
+Toolbar di formattazione nel campo domanda
+Funzione "Chat storica"
 
-📬 Contribuisci
+ Modalità mobile responsive
+ 📬 Contribuisci
 Pull Request e feedback benvenuti!
 Inizia aprendo una issue o forka il progetto!
 
