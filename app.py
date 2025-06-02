@@ -1,4 +1,5 @@
-from flask import Flask, render_template, request, jsonify, redirectimport sqlite3
+from flask import Flask, render_template, request, jsonify, redirect
+import sqlite3
 import os
 from sql_ollama import call_ollama_sql, get_schema_for_prompt, describe_database
 import subprocess
