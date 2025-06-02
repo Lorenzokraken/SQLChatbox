@@ -27,7 +27,7 @@ Un'applicazione web interattiva che ti permette di porre domande in linguaggio n
 
 ---
 Scarica e installa Ollama.
-https://ollama.com/download
+- https://ollama.com/download
 
 Se non ha una buona GPU apri il cmd e digita:
 ollama run llama3
@@ -91,15 +91,15 @@ Ollama genererà un Query SQL e ti mostrerà i campi che ti interessano:
 ![Immagine 2025-06-02 192146](https://github.com/user-attachments/assets/4f18f270-0111-4cf9-8544-e7437049f05a)
 
 
-🧲 Prossime migliorie
-Supporto SQL PostgreSQL e MySQL
-Toolbar di formattazione nel campo domanda
-Funzione "Chat storica"
+##🧲 Prossime migliorie:
+#- Supporto SQL PostgreSQL e MySQL
+#- Toolbar di formattazione nel campo domanda
+#- Funzione "Chat storica"
 
  Modalità mobile responsive
  📬 Contribuisci
-Pull Request e feedback benvenuti!
-Inizia aprendo una issue o forka il progetto!
+- Pull Request e feedback benvenuti!
+- Inizia aprendo una issue o forka il progetto!
 
 
 
