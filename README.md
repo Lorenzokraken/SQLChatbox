@@ -75,8 +75,7 @@ Avviato Flask ti troverai qui sul Localhost:
 ```
 Carica un database e ricevi uno schema del database con una descrizione dettagliata:
 ```
-![Screenshot 2025-06-02 182519](https://github.com/user-attachments/assets/ee83579a-568d-4560-8ebf-75070d3c9c43)
-![Screenshot 2025-05-24 143805](https://github.com/user-attachments/assets/24d6955c-2428-4943-953c-0b253c3076e4)
+![Screenshot 2025-06-02 182519](https://github.com/user-attachments/assets/ee83579a-568d-4560-8ebf-75070d3c9c43)![Screenshot 2025-05-24 143805](https://github.com/user-attachments/assets/24d6955c-2428-4943-953c-0b253c3076e4)
 ```
 Scrivi quello che vorresti visulizzare/modificare dal database cercando di essere più chiaro possibile.
 ```
